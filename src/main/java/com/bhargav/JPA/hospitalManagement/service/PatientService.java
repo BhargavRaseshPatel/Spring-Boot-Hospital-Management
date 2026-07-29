@@ -2,19 +2,19 @@ package com.bhargav.JPA.hospitalManagement.service;
 
 import com.bhargav.JPA.hospitalManagement.entity.Patient;
 import com.bhargav.JPA.hospitalManagement.repository.PatientRepository;
-import jakarta.transaction.Transactional;
+import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
 public class PatientService {
     private final PatientRepository patientRepository;
 
-    @Transactional
+    @Transactional(readOnly = true)
     public Patient getPatientById(Long id){
-
-        Patient p1 = patientRepository.findById(id).orElseThrow();
-        return p1;
+        return patientRepository.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException("Patient not found with id: " + id));
     }
 }

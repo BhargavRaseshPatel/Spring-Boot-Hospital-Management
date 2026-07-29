@@ -3,16 +3,15 @@ package com.bhargav.JPA.hospitalManagement.repository;
 import com.bhargav.JPA.hospitalManagement.dto.BloodGroupCountResponseEntity;
 import com.bhargav.JPA.hospitalManagement.entity.Patient;
 import com.bhargav.JPA.hospitalManagement.entity.type.BloodGroupType;
-import jakarta.transaction.Transactional;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.util.List;
-import java.util.Objects;
 
 public interface PatientRepository extends JpaRepository<Patient, Long> {
 
@@ -21,10 +20,10 @@ public interface PatientRepository extends JpaRepository<Patient, Long> {
 
     List<Patient> findByBirthDateOrEmail(LocalDate date,String email);
 
-    @Query("SELECT p FROM Patient p where p.bloodGroup = ?1")
+    @Query("SELECT p FROM Patient p where p.bloodGroup = :bloodGroup")
     List<Patient> findByBloodGroup(@Param("bloodGroup") BloodGroupType bloodGroup);
 
-    @Query("SELECT p FROM Patient  p where p.birthDate > :birthDate")
+    @Query("SELECT p FROM Patient p where p.birthDate > :birthDate")
     List<Patient> findByBornAfterDate(@Param("birthDate") LocalDate birthDate);
 
     @Query("select new com.bhargav.JPA.hospitalManagement.dto.BloodGroupCountResponseEntity(p.bloodGroup, Count(p)) from Patient p group by p.bloodGroup")
@@ -32,11 +31,16 @@ public interface PatientRepository extends JpaRepository<Patient, Long> {
     List<BloodGroupCountResponseEntity> countEachBloodGroupType();
 
     @Query(value = "select * from patient_tbl", nativeQuery = true)
-    List<Patient> findALlPatients(Pageable pageable);
+    List<Patient> findAllPatients(Pageable pageable);
 
-    @Modifying
+    // clear/flush keep the persistence context from serving a stale entity after the bulk update
+    @Modifying(clearAutomatically = true, flushAutomatically = true)
     @Transactional
     @Query("UPDATE Patient p SET p.name=:name where p.id = :id")
     int updateNameWithId(@Param("name") String name, @Param("id") Long id);
+
+    // DISTINCT: a JOIN FETCH on a to-many returns one row per appointment, duplicating the parent
+    @Query("SELECT DISTINCT p FROM Patient p LEFT JOIN FETCH p.appointments")
+    List<Patient> findAllPatientWithAppointment();
 
 }

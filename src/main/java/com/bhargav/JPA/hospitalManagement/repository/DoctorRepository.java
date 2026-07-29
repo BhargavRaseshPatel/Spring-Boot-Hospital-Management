@@ -1,0 +1,7 @@
+package com.bhargav.JPA.hospitalManagement.repository;
+
+import com.bhargav.JPA.hospitalManagement.entity.Doctor;
+import org.springframework.data.jpa.repository.JpaRepository;
+
+public interface DoctorRepository extends JpaRepository<Doctor, Long> {
+}
