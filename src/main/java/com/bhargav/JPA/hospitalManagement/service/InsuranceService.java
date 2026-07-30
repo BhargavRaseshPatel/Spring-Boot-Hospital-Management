@@ -1,5 +1,6 @@
 package com.bhargav.JPA.hospitalManagement.service;
 
+import com.bhargav.JPA.hospitalManagement.dto.InsuranceRequest;
 import com.bhargav.JPA.hospitalManagement.entity.Insurance;
 import com.bhargav.JPA.hospitalManagement.entity.Patient;
 import com.bhargav.JPA.hospitalManagement.repository.PatientRepository;
@@ -13,6 +14,16 @@ import org.springframework.transaction.annotation.Transactional;
 public class InsuranceService {
 
     private final PatientRepository patientRepository;
+
+    @Transactional
+    public Patient assignInsuranceToPatient(InsuranceRequest request, Long patientId) {
+        Insurance insurance = Insurance.builder()
+                .policyNumber(request.policyNumber())
+                .provider(request.provider())
+                .validUntil(request.validUntil())
+                .build();
+        return assignInsuranceToPatient(insurance, patientId);
+    }
 
     @Transactional
     public Patient assignInsuranceToPatient(Insurance insurance, Long patientId) {

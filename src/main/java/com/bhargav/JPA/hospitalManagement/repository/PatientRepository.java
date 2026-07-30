@@ -39,8 +39,14 @@ public interface PatientRepository extends JpaRepository<Patient, Long> {
     @Query("UPDATE Patient p SET p.name=:name where p.id = :id")
     int updateNameWithId(@Param("name") String name, @Param("id") Long id);
 
-    // DISTINCT: a JOIN FETCH on a to-many returns one row per appointment, duplicating the parent
-    @Query("SELECT DISTINCT p FROM Patient p LEFT JOIN FETCH p.appointments")
+    // DISTINCT: a JOIN FETCH on a to-many returns one row per appointment, duplicating the parent.
+    // The nested fetch of a.doctor matters too — Appointment.doctor is a @ManyToOne (EAGER by
+    // default), so without it Hibernate issues one extra SELECT per doctor.
+    @Query("""
+            SELECT DISTINCT p FROM Patient p
+            LEFT JOIN FETCH p.appointments a
+            LEFT JOIN FETCH a.doctor
+            """)
     List<Patient> findAllPatientWithAppointment();
 
 }
