@@ -1,6 +1,6 @@
 INSERT INTO patient_tbl (name, gender, birth_date, email, blood_group)
 VALUES
-    ('Aarav Sharma', 'MALE', '1990-05-10', 'aarav.sharma@example.com', 'O_POSITIVE'),
+    ('Aarav Verma', 'MALE', '1990-05-10', 'aarav.sharma@example.com', 'O_POSITIVE'),
     ('Ananya Patel', 'FEMALE', '1994-08-22', 'ananya.patel@example.com', 'A_POSITIVE'),
     ('Rohan Mehta', 'MALE', '1988-12-15', 'rohan.mehta@example.com', 'B_POSITIVE'),
     ('Priya Singh', 'FEMALE', '1992-03-05', 'priya.singh@example.com', 'AB_POSITIVE'),

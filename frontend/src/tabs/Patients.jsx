@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { api, BLOOD_GROUPS } from '../api.js';
-import { Notice, Empty } from '../ui.jsx';
+import { Notice, Empty, InsuranceBadge, IconShieldCheck, IconTrash } from '../ui.jsx';
 
 const BLANK = { name: '', birthDate: '', email: '', gender: 'MALE', bloodGroup: 'O_POSITIVE' };
 
@@ -12,7 +12,10 @@ export default function Patients() {
   const [message, setMessage] = useState(null);
   const [insuranceFor, setInsuranceFor] = useState(null);
 
-  const load = () => api.listPatients(page).then(setData).catch(setError);
+  const load = () => {
+    setError(null); // a failed load must not leave its error behind once one succeeds
+    return api.listPatients(page).then(setData).catch(setError);
+  };
   useEffect(() => { load(); }, [page]);
 
   const reset = () => { setError(null); setMessage(null); };
@@ -85,34 +88,48 @@ export default function Patients() {
       <Notice error={error} message={message} />
 
       <h2>Patients</h2>
+      {patients.length > 0 && (
+        <p className="hint">
+          <IconShieldCheck /> {patients.filter((p) => p.insuranceProvider).length} of{' '}
+          {patients.length} on this page have insurance on file.
+        </p>
+      )}
       {patients.length === 0 ? (
         <Empty>No patients on this page.</Empty>
       ) : (
+        <div className="table-scroll">
         <table>
           <thead>
             <tr>
               <th>ID</th><th>Name</th><th>Birth date</th><th>Email</th>
-              <th>Blood group</th><th></th>
+              <th>Blood group</th><th>Insurance</th><th></th>
             </tr>
           </thead>
           <tbody>
             {patients.map((p) => (
-              <tr key={p.id}>
+              <tr key={p.id} className={p.insuranceProvider ? 'is-covered' : undefined}>
                 <td>{p.id}</td>
                 <td>{p.name}</td>
                 <td>{p.birthDate}</td>
                 <td className="muted">{p.email}</td>
                 <td><span className="pill">{p.bloodGroup}</span></td>
+                <td>
+                  <InsuranceBadge provider={p.insuranceProvider} validUntil={p.insuranceValidUntil} />
+                </td>
                 <td className="actions">
-                  <button onClick={() => setInsuranceFor(insuranceFor === p.id ? null : p.id)}>
-                    Insurance
+                  <button title="Manage insurance"
+                          onClick={() => setInsuranceFor(insuranceFor === p.id ? null : p.id)}>
+                    <IconShieldCheck /> Insurance
                   </button>
-                  <button className="danger" onClick={() => remove(p.id)}>Delete</button>
+                  <button className="danger" title="Delete patient" onClick={() => remove(p.id)}>
+                    <IconTrash /> Delete
+                  </button>
                 </td>
               </tr>
             ))}
           </tbody>
         </table>
+        </div>
       )}
 
       {meta && (

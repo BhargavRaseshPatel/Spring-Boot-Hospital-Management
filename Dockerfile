@@ -10,6 +10,8 @@ RUN mvn -B -Pfrontend package -DskipTests
 FROM eclipse-temurin:21-jre
 WORKDIR /app
 COPY --from=build /app/target/*.jar app.jar
-ENV SPRING_PROFILES_ACTIVE=demo
+# No profile is forced. The connection comes from SPRING_DATASOURCE_* and there is no
+# embedded-database fallback, so a missing variable fails the deploy instead of silently
+# serving an empty throwaway database.
 EXPOSE 9090
 ENTRYPOINT ["java", "-jar", "app.jar"]

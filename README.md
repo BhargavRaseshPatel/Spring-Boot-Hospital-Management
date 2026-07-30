@@ -10,26 +10,78 @@ query-performance problems that come with them.
 
 ## Run it
 
-**One command, no database required** — the `demo` profile uses in-memory H2:
+The app has **no embedded-database fallback** — it connects to the PostgreSQL you give it, or it
+refuses to start. That is deliberate: a fallback silently serves an empty or stale database and
+looks like the seed data came back.
 
-```bash
-./mvnw -Pfrontend package -DskipTests && java -jar target/*.jar --spring.profiles.active=demo
+Create `config/application.properties` (gitignored, read automatically from `./config/`):
+
+```properties
+spring.datasource.url=jdbc:postgresql://<host>/<db>?sslmode=require
+spring.datasource.username=<user>
+spring.datasource.password=<password>
 ```
 
-Then open **http://localhost:9090** for the UI, or **http://localhost:9090/swagger-ui.html**
-for the interactive API docs.
+Then:
+
+```bash
+./mvnw -Pfrontend package -DskipTests && java -jar target/*.jar
+```
+
+Open **http://localhost:9090** for the UI, or **/swagger-ui.html** for the interactive API docs.
 
 <details>
-<summary>Local development against PostgreSQL</summary>
+<summary>Front end with hot reload</summary>
 
 ```bash
-createdb hospital_management
-./mvnw spring-boot:run                     # API on :9090, seeded from data.sql
+./mvnw spring-boot:run                     # API on :9090
 cd frontend && npm install && npm run dev  # UI on :5173, proxies /api to :9090
 ```
-
-Credentials come from `DB_USER` / `DB_PASSWORD` (both default to `postgres`).
 </details>
+
+<details>
+<summary>Seeding an empty database</summary>
+
+`data.sql` loads only when asked, once:
+
+```bash
+SPRING_SQL_INIT_MODE=always java -jar target/*.jar
+```
+
+Run it a second time and it fails on the unique email constraint — by design.
+</details>
+
+---
+
+## Deploy with permanent data (Neon + Render)
+
+The default configuration is already non-destructive — `ddl-auto=update` and
+`sql.init.mode=never` — so pointing it at a real database keeps the data. **No profile is
+involved**: set three environment variables and that is the whole switch.
+
+1. Create a free project at [neon.tech](https://neon.tech).
+2. Set these wherever the app runs — the Render dashboard, or the IntelliJ run configuration:
+
+   | Variable | Value |
+   |---|---|
+   | `SPRING_DATASOURCE_URL` | `jdbc:postgresql://<host>.neon.tech/<db>?sslmode=require` |
+   | `SPRING_DATASOURCE_USERNAME` | your Neon role |
+   | `SPRING_DATASOURCE_PASSWORD` | your Neon password |
+
+   Neon shows a `postgresql://user:pass@host/db?sslmode=require&channel_binding=require` URI —
+   that is **not** a JDBC URL. Strip the credentials, prefix `jdbc:`, drop `channel_binding`
+   (a libpq parameter the JDBC driver doesn't accept), and pass user and password separately.
+   Prefer the `-pooler` host: it handles the many short-lived connections a web app makes.
+
+3. **Once, against an empty database**, add `SPRING_SQL_INIT_MODE=always` to load `data.sql`,
+   then remove it. Leaving it on re-inserts the seed and fails the unique email constraint.
+
+Neon scales to zero when idle, so the first request after a quiet period takes a few seconds
+while the database wakes.
+
+> Seed data only ever loads when `SPRING_SQL_INIT_MODE=always` is set, and the schema is never
+> dropped. If you see `data.sql` content instead of your own rows, the app is pointed at a
+> different database — check which URL it logged at startup.
 
 ---
 

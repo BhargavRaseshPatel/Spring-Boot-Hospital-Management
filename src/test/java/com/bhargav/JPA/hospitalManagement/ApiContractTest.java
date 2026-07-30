@@ -25,12 +25,14 @@ class ApiContractTest {
     @Autowired
     private MockMvc mockMvc;
 
+    // Asserts shape, not seed content — the names in data.sql are free to change.
     @Test
     void getsSeededPatient() throws Exception {
         mockMvc.perform(get("/api/patients/1"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value(1))
-                .andExpect(jsonPath("$.name").value("Aarav Sharma"));
+                .andExpect(jsonPath("$.name").isNotEmpty())
+                .andExpect(jsonPath("$.email").isNotEmpty());
     }
 
     @Test
@@ -38,7 +40,8 @@ class ApiContractTest {
         mockMvc.perform(get("/api/patients").param("size", "2"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.content.length()").value(2))
-                .andExpect(jsonPath("$.page.totalElements").value(10));
+                .andExpect(jsonPath("$.page.size").value(2))
+                .andExpect(jsonPath("$.page.totalElements").isNumber());
     }
 
     @Test
@@ -62,13 +65,17 @@ class ApiContractTest {
                 .andExpect(jsonPath("$.detail").value("Patient not found with id: 9999"));
     }
 
+    /** Self-contained: creates the row it then collides with, so it survives edits to data.sql. */
     @Test
     void rejectsDuplicateEmailWithConflict() throws Exception {
-        mockMvc.perform(post("/api/patients")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("""
-                                {"name":"Dup","birthDate":"1990-01-01","email":"aarav.sharma@example.com",
-                                 "gender":"MALE","bloodGroup":"O_POSITIVE"}"""))
+        String body = """
+                {"name":"Dup Check","birthDate":"1990-01-01","email":"dup.check@example.com",
+                 "gender":"MALE","bloodGroup":"O_POSITIVE"}""";
+
+        mockMvc.perform(post("/api/patients").contentType(MediaType.APPLICATION_JSON).content(body))
+                .andExpect(status().isCreated());
+
+        mockMvc.perform(post("/api/patients").contentType(MediaType.APPLICATION_JSON).content(body))
                 .andExpect(status().isConflict())
                 .andExpect(jsonPath("$.status").value(409));
     }

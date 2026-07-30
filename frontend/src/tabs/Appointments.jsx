@@ -12,11 +12,13 @@ export default function Appointments() {
 
   useEffect(() => { api.listDoctors().then(setDoctors).catch(setError); }, []);
 
-  const load = (id) =>
-    api.appointmentsForPatient(id).then(setAppointments).catch((err) => {
+  const load = (id) => {
+    setError(null); // drop a stale "patient not found" when switching to another id
+    return api.appointmentsForPatient(id).then(setAppointments).catch((err) => {
       setAppointments([]);
       setError(err);
     });
+  };
 
   useEffect(() => { load(patientId); }, [patientId]);
 

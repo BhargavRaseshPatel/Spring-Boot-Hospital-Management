@@ -46,11 +46,15 @@
 			<artifactId>postgresql</artifactId>
 			<scope>runtime</scope>
 		</dependency>
-		<!-- Backs the 'demo' profile so the public deployment needs no database server. -->
+		<!--
+			test scope, deliberately. At runtime scope Spring Boot auto-configures an embedded
+			H2 whenever no datasource URL is set, so a missing config silently starts on an
+			empty throwaway database instead of failing. Tests are the only place H2 belongs.
+		-->
 		<dependency>
 			<groupId>com.h2database</groupId>
 			<artifactId>h2</artifactId>
-			<scope>runtime</scope>
+			<scope>test</scope>
 		</dependency>
 		<dependency>
 			<groupId>org.projectlombok</groupId>
@@ -94,6 +98,28 @@
 					</annotationProcessorPaths>
 				</configuration>
 			</plugin>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-surefire-plugin</artifactId>
+				<configuration>
+					<!--
+						Tests run against a throwaway in-memory H2, created and seeded from
+						data.sql on every run. These are system properties, not a properties
+						file, because they must outrank a SPRING_DATASOURCE_URL left in the
+						developer's environment — otherwise `mvn test` would drop the real
+						database that variable points at.
+					-->
+					<systemPropertyVariables>
+						<spring.datasource.url>jdbc:h2:mem:test;DB_CLOSE_DELAY=-1</spring.datasource.url>
+						<spring.datasource.driver-class-name>org.h2.Driver</spring.datasource.driver-class-name>
+						<spring.datasource.username>sa</spring.datasource.username>
+						<spring.datasource.password/>
+						<spring.jpa.hibernate.ddl-auto>create</spring.jpa.hibernate.ddl-auto>
+						<spring.sql.init.mode>always</spring.sql.init.mode>
+					</systemPropertyVariables>
+				</configuration>
+			</plugin>
+
 			<plugin>
 				<groupId>org.springframework.boot</groupId>
 				<artifactId>spring-boot-maven-plugin</artifactId>
