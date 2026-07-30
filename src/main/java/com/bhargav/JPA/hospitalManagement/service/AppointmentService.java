@@ -60,7 +60,7 @@ public class AppointmentService {
         if (!patientRepository.existsById(patientId)) {
             throw new EntityNotFoundException("Patient not found with id: " + patientId);
         }
-        return appointmentRepository.findByPatientId(patientId);
+        return appointmentRepository.findByPatientIdOrderByAppointmentTimeAsc(patientId);
     }
 
     @Transactional

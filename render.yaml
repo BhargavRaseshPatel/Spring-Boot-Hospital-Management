@@ -1,0 +1,13 @@
+services:
+  - type: web
+    name: hospital-management
+    runtime: docker
+    plan: free
+    healthCheckPath: /api/doctors
+    envVars:
+      # H2 in-memory: no database service to provision or expire.
+      - key: SPRING_PROFILES_ACTIVE
+        value: demo
+      # Render injects PORT; application.properties already reads ${PORT:9090}.
+      - key: PORT
+        value: 10000

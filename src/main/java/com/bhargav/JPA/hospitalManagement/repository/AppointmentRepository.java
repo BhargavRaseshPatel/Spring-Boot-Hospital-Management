@@ -7,5 +7,7 @@ import java.util.List;
 
 public interface AppointmentRepository extends JpaRepository<Appointment, Long> {
 
-    List<Appointment> findByPatientId(Long patientId);
+    // Without the ORDER BY, row order is whatever the database returns and the UI reshuffles
+    // every time an appointment is updated.
+    List<Appointment> findByPatientIdOrderByAppointmentTimeAsc(Long patientId);
 }
