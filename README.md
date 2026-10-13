@@ -8,6 +8,30 @@ query-performance problems that come with them.
 
 ---
 
+## Screenshots
+
+**Patients** — paginated list with per-row insurance status.
+
+![Patients tab](docs/screenshots/patients.png)
+
+**Insurance** — one-to-one assign / remove panel for a patient.
+
+![Insurance panel](docs/screenshots/insurance.png)
+
+**Appointments** — book an appointment and reassign it to another doctor.
+
+![Appointments tab](docs/screenshots/appointments.png)
+
+**Doctors** — read-only directory.
+
+![Doctors tab](docs/screenshots/doctors.png)
+
+**Analytics** — blood group distribution and the single `JOIN FETCH` patients-with-appointments view.
+
+![Analytics tab](docs/screenshots/analytics.png)
+
+---
+
 ## Run it
 
 The app has **no embedded-database fallback** — it connects to the PostgreSQL you give it, or it
